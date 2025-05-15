@@ -39,6 +39,18 @@ public class CategoryService {
         String email = jwtUtil.extractUsername(jwtUtil.extractTokenFromRequest(request));
         return categoryRepository.findByEmail(email);
     }
+    public String renameCategory(String id, String name, HttpServletRequest request) {
+        String email = jwtUtil.extractUsername(jwtUtil.extractTokenFromRequest(request));
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        if (!category.getEmail().equals(email)) return "❌ Unauthorized";
+
+        category.setName(name);
+        categoryRepository.save(category);
+        return "✅ Category renamed";
+    }
+
 
     public String deleteCategory(String id, HttpServletRequest request) {
         String email = jwtUtil.extractUsername(jwtUtil.extractTokenFromRequest(request));

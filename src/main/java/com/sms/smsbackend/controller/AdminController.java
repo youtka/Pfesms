@@ -45,6 +45,35 @@ public class AdminController {
         return user.isActive() ? "✅ User reactivated." : "🚫 User deactivated.";
     }
 
+    // 🛡️ Toggle admin/user role
+    @PostMapping("/users/{id}/toggle-role")
+    public String toggleUserRole(@PathVariable String id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) return "❌ User not found.";
+
+        if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+            user.setRole("USER");
+        } else {
+            user.setRole("ADMIN");
+        }
+
+        userRepository.save(user);
+        return user.isAdmin() ? "✅ User is now ADMIN." : "👤 User is now regular USER.";
+    }
+
+    // ✏️ Update full name
+    @PutMapping("/users/{id}/update")
+    public String updateUserFullName(@PathVariable String id, @RequestBody Map<String, String> body) {
+        String fullName = body.get("fullName");
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) return "❌ User not found.";
+
+        user.setFullName(fullName);
+        userRepository.save(user);
+
+        return "✅ User name updated.";
+    }
+
     // 📊 Admin statistics
     @GetMapping("/stats")
     public Map<String, Object> getAdminStats() {

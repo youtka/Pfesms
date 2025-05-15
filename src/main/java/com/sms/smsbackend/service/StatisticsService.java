@@ -6,10 +6,11 @@ import com.sms.smsbackend.repository.SmsLogRepository;
 import com.sms.smsbackend.security.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
+import com.sms.smsbackend.model.SmsLog;
+
 
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -34,8 +35,12 @@ public class StatisticsService {
         String email = jwtUtil.extractUsername(jwtUtil.extractTokenFromRequest(request));
         Map<String, Object> result = new HashMap<>();
 
-        result.put("totalCategories", categoryRepository.countByEmail(email));
-        result.put("totalNumbers", phoneNumberRepository.countByEmail(email));
+        long totalCategories = categoryRepository.countByEmail(email);
+        long totalNumbers = phoneNumberRepository.countByEmail(email);
+        long totalSmsSent = smsLogRepository.findByUserEmail(email).size();
+        long totalAiMessages = smsLogRepository.findByUserEmail(email).stream()
+                .filter(SmsLog::isAi)
+                .count();
 
         // Group by category
         Map<String, Long> messagesPerCategory = new HashMap<>();
@@ -52,9 +57,14 @@ public class StatisticsService {
             messagesPerDay.put(date, messagesPerDay.getOrDefault(date, 0L) + 1);
         });
 
+        result.put("totalCategories", totalCategories);
+        result.put("totalNumbers", totalNumbers);
+        result.put("totalSmsSent", totalSmsSent);
+        result.put("totalAiMessages", totalAiMessages);
         result.put("messagesPerCategory", messagesPerCategory);
         result.put("messagesPerDay", messagesPerDay);
 
         return result;
     }
+
 }

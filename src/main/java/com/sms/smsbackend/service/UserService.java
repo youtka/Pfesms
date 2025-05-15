@@ -20,45 +20,29 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ✅ Get current user from JWT token
     public User getCurrentUser(HttpServletRequest request) {
         String token = jwtUtil.extractTokenFromRequest(request);
+        if (token == null) throw new RuntimeException("❌ Token not found");
         String email = jwtUtil.extractUsername(token);
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("❌ User not found"));
     }
 
-    // ✅ Update current user's profile
     public String updateCurrentUser(User updatedUser, HttpServletRequest request) {
-        String token = jwtUtil.extractTokenFromRequest(request);
-        String email = jwtUtil.extractUsername(token);
-
-        User dbUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("❌ User not found"));
-
+        User dbUser = getCurrentUser(request);
         if (updatedUser.getFullName() != null) {
             dbUser.setFullName(updatedUser.getFullName());
         }
-
         if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
             dbUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
         }
-
         userRepository.save(dbUser);
         return "✅ Profile updated successfully";
     }
 
-    // ✅ Delete current user
     public String deleteCurrentUser(HttpServletRequest request) {
-        String token = jwtUtil.extractTokenFromRequest(request);
-        String email = jwtUtil.extractUsername(token);
-
-        User dbUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("❌ User not found"));
-
+        User dbUser = getCurrentUser(request);
         userRepository.delete(dbUser);
         return "✅ User deleted successfully";
     }
-
-
 }

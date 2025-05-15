@@ -6,42 +6,42 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 
+import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtUtil {
 
-    // ✅ Replace this with a strong key in production (must match what you use to decode)
-    private final String SECRET = "xQzsDeke7Glbrfc37uGXbIUnx-2n8AQuwBYgBn9l2j8";
+    // 🔐 Secret without illegal characters
+    private final String SECRET = Base64.getEncoder().encodeToString("mySimpleCleanJwtSecretKey-2025@zakaria".getBytes());
 
-    // ✅ Generate JWT token
-    public String generateToken(String email) {
+    public String generateToken(String email, boolean isAdmin) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("isAdmin", isAdmin);
+
         return Jwts.builder()
-                .setSubject(email) // we use email as subject
+                .setClaims(claims)
+                .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 hours
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
                 .signWith(SignatureAlgorithm.HS256, SECRET)
                 .compact();
     }
 
-    // ✅ Extract claims from JWT
     public Claims extractClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(SECRET)
-                .parseClaimsJws(token)
-                .getBody();
+        return Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token).getBody();
     }
 
-    // ✅ Extract username (email) from token
     public String extractUsername(String token) {
         return extractClaims(token).getSubject();
     }
 
-    // ✅ Get token from Authorization header
     public String extractTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7); // remove "Bearer "
+            return authHeader.substring(7);
         }
         return null;
     }

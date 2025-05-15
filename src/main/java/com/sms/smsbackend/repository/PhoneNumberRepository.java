@@ -8,4 +8,5 @@ public interface PhoneNumberRepository extends MongoRepository<PhoneNumber, Stri
     List<PhoneNumber> findByEmail(String email);
     List<PhoneNumber> findByCategoryId(String categoryId);
     long countByEmail(String email);// make sure it's returning PhoneNumber, not java.lang.Number
+
 }

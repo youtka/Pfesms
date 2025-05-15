@@ -44,7 +44,8 @@ public class AuthService {
             return "Password incorrect!";
         }
 
-        String token = jwtUtil.generateToken(dbUser.getEmail());
+        String token = jwtUtil.generateToken(dbUser.getEmail(), dbUser.isAdmin());
+
         System.out.println("🎟 Generated token: " + token);
         return token;
     }
@@ -74,7 +75,6 @@ public class AuthService {
         PasswordResetToken resetToken = new PasswordResetToken(email, token, expiry);
         tokenRepository.save(resetToken);
 
-        // 👇 ممكن ترسلو بالبريد لاحقاً
         return "✅ Password reset token: " + token;
     }
 

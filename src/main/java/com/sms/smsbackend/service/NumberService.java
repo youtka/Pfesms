@@ -1,6 +1,8 @@
 package com.sms.smsbackend.service;
 
+import com.sms.smsbackend.model.Category;
 import com.sms.smsbackend.model.PhoneNumber;
+import com.sms.smsbackend.repository.CategoryRepository;
 import com.sms.smsbackend.repository.PhoneNumberRepository;
 import com.sms.smsbackend.security.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,10 +15,14 @@ import java.util.Optional;
 public class NumberService {
 
     private final PhoneNumberRepository numberRepository;
+    private final CategoryRepository categoryRepository; // ✅ Added
     private final JwtUtil jwtUtil;
 
-    public NumberService(PhoneNumberRepository numberRepository, JwtUtil jwtUtil) {
+    public NumberService(PhoneNumberRepository numberRepository,
+                         CategoryRepository categoryRepository,
+                         JwtUtil jwtUtil) {
         this.numberRepository = numberRepository;
+        this.categoryRepository = categoryRepository;
         this.jwtUtil = jwtUtil;
     }
 
@@ -25,9 +31,12 @@ public class NumberService {
         String email = jwtUtil.extractUsername(token);
         number.setEmail(email);
 
-        // If category is empty, set to "Uncategorized"
-        if (number.getCategory() == null || number.getCategory().isEmpty()) {
-            number.setCategory("Uncategorized");
+        if (number.getCategoryId() == null || number.getCategoryId().isEmpty()) {
+            // 🔁 Auto-assign "Uncategorized"
+            Category uncategorized = categoryRepository.findByEmailAndName(email, "Uncategorized")
+                    .orElseGet(() -> categoryRepository.save(new Category(email, "Uncategorized")));
+
+            number.setCategoryId(uncategorized.getId());
         }
 
         numberRepository.save(number);
@@ -38,6 +47,10 @@ public class NumberService {
         String token = jwtUtil.extractTokenFromRequest(request);
         String email = jwtUtil.extractUsername(token);
         return numberRepository.findByEmail(email);
+    }
+
+    public List<PhoneNumber> getByCategoryId(String categoryId) {
+        return numberRepository.findByCategoryId(categoryId);
     }
 
     public String deleteNumber(String id, HttpServletRequest request) {
@@ -60,8 +73,8 @@ public class NumberService {
             if (updatedNumber.getFullName() != null)
                 dbNumber.setFullName(updatedNumber.getFullName());
 
-            if (updatedNumber.getCategory() != null)
-                dbNumber.setCategory(updatedNumber.getCategory());
+            if (updatedNumber.getCategoryId() != null)
+                dbNumber.setCategoryId(updatedNumber.getCategoryId());
 
             numberRepository.save(dbNumber);
             return "✅ Number updated successfully";

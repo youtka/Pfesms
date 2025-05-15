@@ -33,6 +33,13 @@ public class User {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    // Check if user is admin
+
+
+    // Set role to admin or user
+    public void setAdmin(boolean isAdmin) {
+        this.role = isAdmin ? "ADMIN" : "USER";
+    }
 
     // Helper
     public boolean isAdmin() {

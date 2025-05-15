@@ -35,4 +35,10 @@ public class CategoryController {
     public ResponseEntity<String> deleteCategory(@PathVariable String id, HttpServletRequest request) {
         return ResponseEntity.ok(categoryService.deleteCategory(id, request));
     }
+    @PutMapping("/update/{id}")
+    public ResponseEntity<String> renameCategory(@PathVariable String id, @RequestBody Map<String, String> body, HttpServletRequest request) {
+        String name = body.get("name");
+        return ResponseEntity.ok(categoryService.renameCategory(id, name, request));
+    }
+
 }

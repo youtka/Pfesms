@@ -48,6 +48,13 @@ public class NumberController {
         return ResponseEntity.ok(numberService.getMyNumbers(request));
     }
 
+    // ✅ Get Numbers by Category
+    @GetMapping("/by-category/{categoryId}")
+    public ResponseEntity<List<PhoneNumber>> getNumbersByCategory(@PathVariable String categoryId) {
+        List<PhoneNumber> numbers = numberService.getByCategoryId(categoryId);
+        return ResponseEntity.ok(numbers);
+    }
+
     // ✅ Delete Number
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteNumber(@PathVariable String id, HttpServletRequest request) {
