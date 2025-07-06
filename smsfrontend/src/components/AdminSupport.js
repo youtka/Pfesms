@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getToken } from '../services/authService';
+import AdminSidebarLayout from './AdminSidebarLayout';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './Support.css';
-import AdminSidebarLayout from './AdminSidebarLayout'; // ✅ sidebar layout
 
 const AdminSupport = () => {
   const [users, setUsers] = useState([]);
@@ -9,9 +10,10 @@ const AdminSupport = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
+  const [newMsgNotif, setNewMsgNotif] = useState({});
   const token = getToken();
 
-  // ✅ Fetch logged-in admin email
+  // Get admin email
   useEffect(() => {
     fetch('http://localhost:9190/api/auth/me', {
       headers: { Authorization: `Bearer ${token}` }
@@ -21,7 +23,7 @@ const AdminSupport = () => {
       .catch(console.error);
   }, []);
 
-  // ✅ Fetch all users
+  // Fetch users
   useEffect(() => {
     fetch('http://localhost:9190/api/admin/users', {
       headers: { Authorization: `Bearer ${token}` }
@@ -31,20 +33,45 @@ const AdminSupport = () => {
       .catch(console.error);
   }, []);
 
-  // ✅ Fetch conversation
+  // Fetch messages for selected user and set notification
   useEffect(() => {
     if (!selectedEmail) return;
-    fetch(`http://localhost:9190/api/support/${selectedEmail}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(setMessages)
-      .catch(console.error);
-  }, [selectedEmail]);
+    const fetchMessages = () => {
+      fetch(`http://localhost:9190/api/support/${selectedEmail}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          // Check new messages from user
+          const last = data[data.length - 1];
+          setMessages(data);
+          if (
+            last &&
+            last.senderEmail !== adminEmail &&
+            (!newMsgNotif[selectedEmail] || newMsgNotif[selectedEmail] < last.timestamp)
+          ) {
+            setNewMsgNotif(prev => ({
+              ...prev,
+              [selectedEmail]: last.timestamp
+            }));
+            setTimeout(() => {
+              setNewMsgNotif(prev => {
+                const copy = { ...prev };
+                delete copy[selectedEmail];
+                return copy;
+              });
+            }, 5000);
+          }
+        })
+        .catch(console.error);
+    };
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 4000);
+    return () => clearInterval(interval);
+  }, [selectedEmail, adminEmail]);
 
   const handleSend = () => {
     if (!input || !selectedEmail) return;
-
     fetch('http://localhost:9190/api/support', {
       method: 'POST',
       headers: {
@@ -56,7 +83,6 @@ const AdminSupport = () => {
         content: input
       })
     })
-      .then(res => res.json())
       .then(() => {
         setInput('');
         // refresh messages
@@ -72,28 +98,35 @@ const AdminSupport = () => {
       <div className="container mt-4 support-page">
         <div className="support-chat">
           <div className="users-list">
-            <h5>👥 Users</h5>
+            <h5>
+              <i className="bi bi-people" /> Users
+            </h5>
             <ul className="list-group">
               {users.map(user => (
                 <li
                   key={user.id}
-                  className={`list-group-item ${user.email === selectedEmail ? 'active' : ''}`}
+                  className={`list-group-item${user.email === selectedEmail ? ' active' : ''}`}
                   onClick={() => setSelectedEmail(user.email)}
                 >
+                  <i className="bi bi-person-circle me-2"></i>
                   {user.email}
+                  {newMsgNotif[user.email] && (
+                    <span className="new-message-notif ms-auto">
+                      <i className="bi bi-bell-fill"></i>
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
           </div>
 
           <div className="chat-area">
-            <h5>📨 Chat with: {selectedEmail || 'Select a user'}</h5>
+            <h5>
+              <i className="bi bi-chat-text"></i> Chat with: {selectedEmail || 'Select a user'}
+            </h5>
             <div className="chat-messages">
               {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`msg ${msg.senderEmail === adminEmail ? 'sent' : 'received'}`}
-                >
+                <div key={i} className={`msg ${msg.senderEmail === adminEmail ? 'sent' : 'received'}`}>
                   <div className="bubble">{msg.content}</div>
                   <div className="timestamp">
                     {new Date(msg.timestamp).toLocaleString()}
@@ -103,7 +136,7 @@ const AdminSupport = () => {
             </div>
 
             {selectedEmail && (
-              <div className="input-group mt-2">
+              <div className="input-group mt-3">
                 <input
                   className="form-control"
                   value={input}
@@ -111,7 +144,7 @@ const AdminSupport = () => {
                   placeholder="Type your message..."
                 />
                 <button className="btn btn-primary" onClick={handleSend}>
-                  Send
+                  <i className="bi bi-send-fill"></i> Send
                 </button>
               </div>
             )}

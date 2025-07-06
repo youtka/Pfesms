@@ -56,9 +56,7 @@ const AdminSidebarLayout = ({ children }) => {
           <li onClick={handleLogout}>
             <FaSignOutAlt /> <span>Logout</span>
           </li>
-          <li>
-            <FaCog /> <span>Settings</span>
-          </li>
+
         </div>
       </div>
 

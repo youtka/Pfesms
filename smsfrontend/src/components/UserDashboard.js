@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import UserSidebarLayout from './UserSidebarLayout';
 import { getToken } from '../services/authService';
-import { FaChartBar, FaSms, FaListAlt, FaTags } from 'react-icons/fa';
+import { FaChartBar, FaSms, FaListAlt, FaTags, FaRocket, FaCalendarAlt, FaChartLine, FaUser } from 'react-icons/fa';
 import './Dashboard.css';
 
 import {
   PieChart, Pie, Cell,
-  BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
+  ResponsiveContainer,
+  AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, Legend
 } from 'recharts';
 
 const UserDashboard = () => {
@@ -20,7 +21,6 @@ const UserDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // ✅ Modify chart labels: replace ObjectId with "Manual"
   const categoryChartData = Object.entries(stats.messagesPerCategory || {}).map(
     ([name, value]) => {
       const displayName = /^[0-9a-f]{24}$/.test(name) ? 'Manual' : name;
@@ -32,7 +32,7 @@ const UserDashboard = () => {
     ([date, count]) => ({ date, count })
   );
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  const COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
 
   useEffect(() => {
     const token = getToken();
@@ -43,7 +43,6 @@ const UserDashboard = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log('Fetched Data:', data);
         setStats(data);
         setLoading(false);
       })
@@ -55,111 +54,113 @@ const UserDashboard = () => {
 
   return (
     <UserSidebarLayout>
-      <div className="container mt-4">
-        <h2 className="mb-4">
-          <FaChartBar className="me-2" />
-          Your Dashboard
-        </h2>
-
-        <div className="row g-3">
-          <div className="col-md-3">
-            <div className="card text-center shadow-sm">
-              <div className="card-body">
-                <FaSms size={24} className="mb-2 text-primary" />
-                <h5 className="card-title">Total SMS Sent</h5>
-                <p className="card-text fs-4 fw-bold">
-                  {loading ? 'Loading...' : stats.totalSmsSent}
-                </p>
+      <div className="container-fluid px-4 py-4" style={{ backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h1 className="h3 mb-1 fw-bold text-dark">
+                  <FaUser className="me-2 text-primary" />
+                  Your Dashboard
+                </h1>
+                <p className="text-muted mb-0">Track your messaging performance and insights</p>
               </div>
-            </div>
-          </div>
-
-          <div className="col-md-3">
-            <div className="card text-center shadow-sm">
-              <div className="card-body">
-                <FaTags size={24} className="mb-2 text-success" />
-                <h5 className="card-title">Categories</h5>
-                <p className="card-text fs-4 fw-bold">
-                  {loading ? 'Loading...' : stats.totalCategories}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-3">
-            <div className="card text-center shadow-sm">
-              <div className="card-body">
-                <FaListAlt size={24} className="mb-2 text-danger" />
-                <h5 className="card-title">Phone Numbers</h5>
-                <p className="card-text fs-4 fw-bold">
-                  {loading ? 'Loading...' : stats.totalNumbers}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-3">
-            <div className="card text-center shadow-sm">
-              <div className="card-body">
-                <FaChartBar size={24} className="mb-2 text-warning" />
-                <h5 className="card-title">AI Messages</h5>
-                <p className="card-text fs-4 fw-bold">
-                  {loading ? 'Loading...' : stats.totalAiMessages}
-                </p>
+              <div className="d-flex align-items-center">
+                <div className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+                  <FaCalendarAlt className="me-2" />
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Charts */}
-        <div className="row g-3 mt-4">
-          {/* Pie Chart - Messages per Category */}
-          <div className="col-md-6">
-            <div className="card shadow-sm">
+        <div className="row g-4 mb-5">
+          {[{
+            icon: <FaSms />, label: 'Total SMS Sent', value: stats.totalSmsSent,
+            gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', change: '+12%'
+          }, {
+            icon: <FaTags />, label: 'Categories', value: stats.totalCategories,
+            gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', change: '+3'
+          }, {
+            icon: <FaListAlt />, label: 'Phone Numbers', value: stats.totalNumbers,
+            gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', change: '+8'
+          }, {
+            icon: <FaRocket />, label: 'AI Messages', value: stats.totalAiMessages,
+            gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', change: '+24%'
+          }].map((card, i) => (
+            <div key={i} className="col-xl-3 col-md-6">
+              <div className="card border-0 shadow-sm h-100 position-relative overflow-hidden">
+                <div className="position-absolute top-0 start-0 w-100 h-100 opacity-10" style={{ background: card.gradient }}></div>
+                <div className="card-body position-relative text-white">
+                  <div className="d-flex justify-content-between align-items-start mb-3">
+                    <div className="d-flex align-items-center justify-content-center rounded-3 shadow-sm" style={{ width: '48px', height: '48px', background: card.gradient }}>
+                      {React.cloneElement(card.icon, { size: 20, className: 'text-white' })}
+                    </div>
+                    <span className="badge bg-white text-dark fw-bold">{card.change}</span>
+                  </div>
+                  <h3 className="fw-bold mb-1">{card.value}</h3>
+                  <p className="mb-0">{card.label}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="row g-4">
+          <div className="col-lg-6">
+            <div className="card border-0 shadow-sm h-100">
+              <div className="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 className="mb-0 fw-semibold"><FaTags className="me-2 text-primary" />Messages by Category</h5>
+                <div className="badge bg-primary bg-opacity-10 text-primary">Distribution</div>
+              </div>
               <div className="card-body">
-                <h5 className="card-title text-center">Messages per Category</h5>
-                {categoryChartData.length > 0 ? (
+                {loading ? <div>Loading...</div> : (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
-                      <Pie
-                        data={categoryChartData}
-                        dataKey="value"
-                        nameKey="name"
-                        outerRadius={100}
-                        label
-                      >
+                      <Pie data={categoryChartData} dataKey="value" nameKey="name" outerRadius={100}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                         {categoryChartData.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip formatter={(value) => [value, 'Messages']} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
-                ) : (
-                  <p className="text-center">No data available</p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Bar Chart - Messages per Day */}
-          <div className="col-md-6">
-            <div className="card shadow-sm">
+          <div className="col-lg-6">
+            <div className="card border-0 shadow-sm h-100">
+              <div className="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 className="mb-0 fw-semibold"><FaChartLine className="me-2 text-success" />Daily Activity</h5>
+                <div className="badge bg-success bg-opacity-10 text-success">Trends</div>
+              </div>
               <div className="card-body">
-                <h5 className="card-title text-center">Messages per Day</h5>
-                {dayChartData.length > 0 ? (
+                {loading ? <div>Loading...</div> : (
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={dayChartData}>
+                    <AreaChart data={dayChartData}>
+                      <defs>
+                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#11998e" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#11998e" stopOpacity={0.1} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e6ed" />
                       <XAxis dataKey="date" />
                       <YAxis />
                       <Tooltip />
-                      <Legend />
-                      <Bar dataKey="count" fill="#8884d8" />
-                    </BarChart>
+                      <Area type="monotone" dataKey="count" stroke="#11998e" fill="url(#colorCount)" />
+                    </AreaChart>
                   </ResponsiveContainer>
-                ) : (
-                  <p className="text-center">No data available</p>
                 )}
               </div>
             </div>

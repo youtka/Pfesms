@@ -74,28 +74,34 @@ const SmsInsights = () => {
   return (
     <UserSidebarLayout>
       <div className="container mt-4">
-        <h3 className="mb-4">🤖 SMS AI Insights</h3>
-        <button className="btn btn-primary mb-3" onClick={fetchStatsAndAnalyze} disabled={loading}>
+        <h3 className="mb-4" style={{ color: '#2c3e50', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', textShadow: '2px 2px 4px rgba(0,0,0,0.1)' }}>🤖 SMS AI Insights</h3>
+        <button className="btn btn-primary mb-3" style={{ backgroundColor: '#3498db', border: 'none', padding: '10px 20px', borderRadius: '20px', transition: 'transform 0.3s', color: '#fff', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }} onClick={fetchStatsAndAnalyze} disabled={loading}>
           {loading ? "Analyzing..." : "🔍 Analyze SMS Usage"}
         </button>
 
-        <div className="chat-box p-3 mb-3 border rounded bg-light" style={{ height: 300, overflowY: "auto" }}>
+        <div className="chat-box p-3 mb-3 border rounded-4 bg-white shadow-lg" style={{ height: 300, overflowY: "auto", backgroundColor: '#f5f7fa' }}>
           {messages.map((msg, i) => (
-            <div key={i} className={`mb-2 ${msg.role === "user" ? "text-end" : "text-start"}`}>
-              <strong>{msg.role === "user" ? "You" : "AI"}</strong>: {msg.content}
+            <div key={i} className={`mb-3 p-2 rounded-3 ${msg.role === "user" ? "bg-primary text-white text-end" : "bg-light text-dark text-start"}`} style={{ maxWidth: "70%", marginLeft: msg.role === "user" ? "auto" : "0", transition: "opacity 0.3s", boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <div className="d-flex align-items-center">
+                <span style={{ fontSize: "24px", marginRight: "10px" }}>{msg.role === "user" ? "👤" : "🤖"}</span>
+                <div>
+                  <strong style={{ color: msg.role === "user" ? "#fff" : "#2c3e50" }}>{msg.role === "user" ? "You" : "AI"}</strong>: {msg.content}
+                </div>
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="input-group">
+        <div className="input-group shadow-sm rounded-4 overflow-hidden" style={{ backgroundColor: '#fff' }}>
           <input
-            className="form-control"
+            className="form-control border-0"
             placeholder="Ask follow-up..."
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             disabled={loading}
+            style={{ padding: "15px", fontSize: "16px", backgroundColor: 'transparent' }}
           />
-          <button className="btn btn-success" onClick={handleSend} disabled={loading}>
+          <button className="btn btn-success" style={{ backgroundColor: '#28a745', border: 'none', padding: '10px 20px', borderRadius: '0 20px 20px 0', transition: 'transform 0.3s', color: '#fff', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }} onClick={handleSend} disabled={loading}>
             Send
           </button>
         </div>

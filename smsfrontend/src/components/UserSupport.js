@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { getCurrentUser, getToken } from '../services/authService';
 import UserSidebarLayout from './UserSidebarLayout';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './Support.css';
 
 const UserSupport = () => {
@@ -19,7 +20,7 @@ const UserSupport = () => {
   useEffect(() => {
     if (!userEmail) return;
     fetchMessages();
-    const interval = setInterval(fetchMessages, 5000);
+    const interval = setInterval(fetchMessages, 4000);
     return () => clearInterval(interval);
   }, [userEmail]);
 
@@ -30,7 +31,7 @@ const UserSupport = () => {
       .then(res => res.json())
       .then(data => {
         setMessages(data);
-        scrollToBottom();
+        setTimeout(scrollToBottom, 200);
       })
       .catch(console.error);
   };
@@ -54,7 +55,6 @@ const UserSupport = () => {
         content: input.trim()
       })
     })
-      .then(res => res.json())
       .then(() => {
         setInput('');
         fetchMessages();
@@ -65,7 +65,9 @@ const UserSupport = () => {
   return (
     <UserSidebarLayout>
       <div className="container mt-4 support-page">
-        <h5>💬 Support Chat with Admin</h5>
+        <h5>
+          <i className="bi bi-chat-dots"></i> Support Chat with Admin
+        </h5>
         <div className="chat-area">
           <div className="chat-messages">
             {messages.map((msg, i) => (
@@ -82,7 +84,7 @@ const UserSupport = () => {
             <div ref={chatEndRef} />
           </div>
 
-          <div className="input-group mt-2">
+          <div className="input-group mt-3">
             <input
               className="form-control"
               value={input}
@@ -90,7 +92,7 @@ const UserSupport = () => {
               placeholder="Type your message..."
             />
             <button className="btn btn-primary" onClick={handleSend}>
-              Send
+              <i className="bi bi-send-fill"></i> Send
             </button>
           </div>
         </div>

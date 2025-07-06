@@ -12,7 +12,7 @@ import java.util.Map;
 public class AiService {
 
     private final String API_URL = "https://openrouter.ai/api/v1/chat/completions";
-    private final String API_KEY = "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";
+    private final String API_KEY = "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";
 
     // ✅ One-shot string prompt (old style)
     public String generateSingleMessage(String prompt) {

@@ -130,87 +130,109 @@ const SendSms = () => {
 
   return (
     <UserSidebarLayout>
-      <div className="container mt-4">
-        <h3 className="mb-4">📤 Send SMS</h3>
+      <div className="container py-5">
+        <div className="card shadow-sm border-0 rounded-4">
+          <div className="card-body p-4 p-md-5">
+            <h3 className="mb-4 fw-bold text-primary">📤 Send SMS</h3>
 
-        <div className="mb-3">
-          <label>Select Categories:</label>
-          <div className="d-flex flex-wrap gap-3">
-            <div className="form-check">
+            <div className="mb-4">
+              <label className="form-label fw-semibold">Select Categories</label>
+              <div className="d-flex flex-wrap gap-3 bg-light p-3 rounded-3">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={categories.length > 0 && selectedCategoryIds.length === categories.length}
+                    onChange={(e) => toggleAllCategories(e.target.checked)}
+                    id="all-categories"
+                  />
+                  <label className="form-check-label fw-medium" htmlFor="all-categories">
+                    All Categories
+                  </label>
+                </div>
+
+                {categories.map((cat) => (
+                  <div className="form-check" key={cat.id}>
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={selectedCategoryIds.includes(cat.id)}
+                      onChange={(e) => toggleCategory(cat.id, e.target.checked)}
+                      id={`cat-${cat.id}`}
+                    />
+                    <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
+                      {cat.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="form-label fw-semibold">Phone Numbers (comma-separated)</label>
+              <textarea
+                className="form-control rounded-3"
+                rows="3"
+                placeholder="e.g., +2126..., +2126..."
+                value={manualNumbers}
+                onChange={(e) => setManualNumbers(e.target.value)}
+              />
+            </div>
+
+            <div className="form-check form-switch mb-4">
               <input
                 className="form-check-input"
                 type="checkbox"
-                checked={categories.length > 0 && selectedCategoryIds.length === categories.length}
-                onChange={(e) => toggleAllCategories(e.target.checked)}
-                id="all-categories"
+                checked={useAI}
+                onChange={() => setUseAI(!useAI)}
+                id="use-ai"
               />
-              <label className="form-check-label" htmlFor="all-categories">
-                All Categories
+              <label className="form-check-label fw-medium" htmlFor="use-ai">
+                Use AI to generate message
               </label>
             </div>
 
-            {categories.map((cat) => (
-              <div className="form-check" key={cat.id}>
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  checked={selectedCategoryIds.includes(cat.id)}
-                  onChange={(e) => toggleCategory(cat.id, e.target.checked)}
-                  id={`cat-${cat.id}`}
-                />
-                <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
-                  {cat.name}
-                </label>
-              </div>
-            ))}
+            <div className="mb-4">
+              <label className="form-label fw-semibold">Message</label>
+              <textarea
+                className="form-control rounded-3"
+                rows="5"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type your message or use AI to generate one"
+              />
+            </div>
+
+            <div className="d-flex gap-2">
+              {useAI && (
+                <button
+                  className="btn btn-outline-secondary rounded-pill px-4"
+                  onClick={handleGenerateAIMessage}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  ) : (
+                    "🧠 "
+                  )}
+                  {loading ? "Generating..." : "Generate with AI"}
+                </button>
+              )}
+              <button
+                className="btn btn-primary rounded-pill px-4"
+                onClick={handleSend}
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                ) : (
+                  "📤 "
+                )}
+                {loading ? "Sending..." : "Send SMS"}
+              </button>
+            </div>
           </div>
         </div>
-
-        <div className="mb-3">
-          <label>Manual Numbers (comma-separated):</label>
-          <textarea
-            className="form-control"
-            rows="2"
-            placeholder="+2126..., +2126..., ..."
-            value={manualNumbers}
-            onChange={(e) => setManualNumbers(e.target.value)}
-          />
-        </div>
-
-        <div className="form-check form-switch mb-3">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={useAI}
-            onChange={() => setUseAI(!useAI)}
-          />
-          <label className="form-check-label">Use AI to generate message</label>
-        </div>
-
-        <div className="mb-3">
-          <label>Message:</label>
-          <textarea
-            className="form-control"
-            rows="4"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type message or use AI"
-          />
-        </div>
-
-        {useAI && (
-          <button
-            className="btn btn-secondary me-2"
-            onClick={handleGenerateAIMessage}
-            disabled={loading}
-          >
-            {loading ? "Generating..." : "🧠 Generate with AI"}
-          </button>
-        )}
-
-        <button className="btn btn-primary" onClick={handleSend} disabled={loading}>
-          {loading ? "Sending..." : "📤 Send SMS"}
-        </button>
       </div>
     </UserSidebarLayout>
   );
