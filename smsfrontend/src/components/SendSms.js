@@ -8,21 +8,22 @@ const SendSms = () => {
   const [manualNumbers, setManualNumbers] = useState("");
   const [useAI, setUseAI] = useState(false);
   const [message, setMessage] = useState("");
+  const [prompt, setPrompt] = useState(""); // AI prompt
   const [loading, setLoading] = useState(false);
 
   const token = localStorage.getItem("token");
 
+  // Fetch categories from backend
   useEffect(() => {
     axios
       .get("http://localhost:9190/api/category/all", {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => {
-        setCategories(res.data);
-      })
+      .then((res) => setCategories(res.data))
       .catch((err) => console.error("❌ Error loading categories", err));
   }, [token]);
 
+  // Handle selecting/deselecting a single category
   const toggleCategory = async (categoryId, isChecked) => {
     let updatedIds = [...selectedCategoryIds];
     if (isChecked) {
@@ -32,6 +33,7 @@ const SendSms = () => {
     }
     setSelectedCategoryIds(updatedIds);
 
+    // Update phone numbers textarea
     const updatedNumbers = new Set(
       manualNumbers.split(",").map((n) => n.trim()).filter((n) => n)
     );
@@ -39,11 +41,8 @@ const SendSms = () => {
     try {
       const res = await axios.get(
         `http://localhost:9190/api/number/by-category/${categoryId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       res.data.forEach((n) => {
         if (isChecked) {
           updatedNumbers.add(n.phoneNumber);
@@ -57,11 +56,11 @@ const SendSms = () => {
     }
   };
 
+  // Handle selecting/deselecting ALL categories
   const toggleAllCategories = async (checked) => {
     if (checked) {
       const allIds = categories.map((c) => c.id);
       setSelectedCategoryIds(allIds);
-
       try {
         const responses = await Promise.all(
           categories.map((cat) =>
@@ -70,7 +69,6 @@ const SendSms = () => {
             })
           )
         );
-
         const allNumbers = new Set();
         responses.forEach((res) => {
           res.data.forEach((n) => allNumbers.add(n.phoneNumber));
@@ -85,13 +83,16 @@ const SendSms = () => {
     }
   };
 
+  // Generate message with AI
   const handleGenerateAIMessage = async () => {
     setLoading(true);
     try {
-      const prompt = "Generate a short SMS message for customer engagement.";
+      const usePrompt = prompt.trim()
+        ? prompt
+        : "Generate a short SMS message for customer engagement.";
       const response = await axios.post(
         "http://localhost:9190/api/ai/generate",
-        { prompt },
+        { prompt: usePrompt },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMessage(response.data);
@@ -102,27 +103,38 @@ const SendSms = () => {
     }
   };
 
+  // Send SMS
   const handleSend = async () => {
-    if (!message.trim()) return alert("❌ Message required");
     if (!manualNumbers.trim()) return alert("❌ Enter at least one phone number");
+    if (!message.trim() && !useAI) return alert("❌ Message required");
 
     const payload = {
-      categoryId: null,
-      numbers: manualNumbers
+      categoryId:
+        selectedCategoryIds.length === 1
+          ? selectedCategoryIds[0]
+          : null, // if one category only, send its id
+      phoneNumbers: manualNumbers
         ? manualNumbers.split(",").map((n) => n.trim()).filter((n) => n)
         : [],
       message,
       isAi: useAI,
+      prompt: prompt,
+      useCategory: selectedCategoryIds.length === 1, // backend uses this if true
     };
 
+    console.log("Payload:", payload);
+
     try {
-      const res = await axios.post("http://localhost:9190/api/sms/send", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.post(
+        "http://localhost:9190/api/sms/send",
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       alert("✅ SMS Sent");
       setMessage("");
       setManualNumbers("");
       setSelectedCategoryIds([]);
+      setPrompt("");
     } catch (err) {
       alert("❌ Failed to send SMS");
     }
@@ -135,41 +147,110 @@ const SendSms = () => {
           <div className="card-body p-4 p-md-5">
             <h3 className="mb-4 fw-bold text-primary">📤 Send SMS</h3>
 
+            {/* Modern Category Selection Section */}
             <div className="mb-4">
-              <label className="form-label fw-semibold">Select Categories</label>
-              <div className="d-flex flex-wrap gap-3 bg-light p-3 rounded-3">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={categories.length > 0 && selectedCategoryIds.length === categories.length}
-                    onChange={(e) => toggleAllCategories(e.target.checked)}
-                    id="all-categories"
-                  />
-                  <label className="form-check-label fw-medium" htmlFor="all-categories">
-                    All Categories
-                  </label>
-                </div>
+              <label className="form-label fw-semibold d-flex align-items-center gap-2 mb-3">
+                <i className="fas fa-layer-group text-primary"></i>
+                Select Categories
+              </label>
 
-                {categories.map((cat) => (
-                  <div className="form-check" key={cat.id}>
+              {/* Select All - Modern Toggle */}
+              <div className="bg-gradient-primary-subtle border border-primary border-opacity-25 rounded-4 p-3 mb-3">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center gap-2">
+                    <div className="bg-primary bg-opacity-10 rounded-circle p-2">
+                      <i className="fas fa-check-double text-primary"></i>
+                    </div>
+                    <span className="fw-medium text-primary">All Categories</span>
+                  </div>
+                  <div className="form-check form-switch">
                     <input
                       className="form-check-input"
                       type="checkbox"
-                      checked={selectedCategoryIds.includes(cat.id)}
-                      onChange={(e) => toggleCategory(cat.id, e.target.checked)}
-                      id={`cat-${cat.id}`}
+                      checked={
+                        categories.length > 0 &&
+                        selectedCategoryIds.length === categories.length
+                      }
+                      onChange={(e) => toggleAllCategories(e.target.checked)}
+                      id="all-categories"
+                      style={{ transform: 'scale(1.2)' }}
                     />
-                    <label className="form-check-label" htmlFor={`cat-${cat.id}`}>
-                      {cat.name}
-                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Individual Categories - Modern Cards */}
+              <div className="row g-3">
+                {categories.map((cat) => (
+                  <div className="col-md-6 col-lg-4" key={cat.id}>
+                    <div
+                      className={`card h-100 border-0 shadow-sm rounded-3 cursor-pointer transition-all ${
+                        selectedCategoryIds.includes(cat.id)
+                          ? 'border-primary border-2 bg-primary bg-opacity-10'
+                          : 'hover-shadow-lg'
+                      }`}
+                      style={{
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        transform: selectedCategoryIds.includes(cat.id) ? 'translateY(-2px)' : 'none'
+                      }}
+                      onClick={() => toggleCategory(cat.id, !selectedCategoryIds.includes(cat.id))}
+                    >
+                      <div className="card-body p-3">
+                        <div className="d-flex align-items-center justify-content-between">
+                          <div className="d-flex align-items-center gap-2">
+                            <div className={`rounded-circle p-2 ${
+                              selectedCategoryIds.includes(cat.id)
+                                ? 'bg-primary text-white'
+                                : 'bg-light text-muted'
+                            }`}>
+                              <i className="fas fa-tag"></i>
+                            </div>
+                            <span className={`fw-medium ${
+                              selectedCategoryIds.includes(cat.id)
+                                ? 'text-primary'
+                                : 'text-dark'
+                            }`}>
+                              {cat.name}
+                            </span>
+                          </div>
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              checked={selectedCategoryIds.includes(cat.id)}
+                              onChange={(e) =>
+                                toggleCategory(cat.id, e.target.checked)
+                              }
+                              id={`cat-${cat.id}`}
+                              style={{ transform: 'scale(1.1)' }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
+
+              {/* Selection Summary */}
+              {selectedCategoryIds.length > 0 && (
+                <div className="mt-3 p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3">
+                  <div className="d-flex align-items-center gap-2">
+                    <i className="fas fa-check-circle text-success"></i>
+                    <small className="text-success fw-medium">
+                      {selectedCategoryIds.length} categor{selectedCategoryIds.length === 1 ? 'y' : 'ies'} selected
+                    </small>
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* Phone Numbers */}
             <div className="mb-4">
-              <label className="form-label fw-semibold">Phone Numbers (comma-separated)</label>
+              <label className="form-label fw-semibold">
+                Phone Numbers (comma-separated)
+              </label>
               <textarea
                 className="form-control rounded-3"
                 rows="3"
@@ -179,6 +260,7 @@ const SendSms = () => {
               />
             </div>
 
+            {/* AI Prompt Toggle + Input */}
             <div className="form-check form-switch mb-4">
               <input
                 className="form-check-input"
@@ -187,11 +269,28 @@ const SendSms = () => {
                 onChange={() => setUseAI(!useAI)}
                 id="use-ai"
               />
-              <label className="form-check-label fw-medium" htmlFor="use-ai">
+              <label
+                className="form-check-label fw-medium"
+                htmlFor="use-ai"
+              >
                 Use AI to generate message
               </label>
             </div>
 
+            {useAI && (
+              <div className="mb-4">
+                <label className="form-label fw-semibold">AI Prompt</label>
+                <textarea
+                  className="form-control rounded-3"
+                  rows="2"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="e.g., promotion about iphone 300 dollar"
+                />
+              </div>
+            )}
+
+            {/* Message Box */}
             <div className="mb-4">
               <label className="form-label fw-semibold">Message</label>
               <textarea
@@ -203,6 +302,7 @@ const SendSms = () => {
               />
             </div>
 
+            {/* Buttons */}
             <div className="d-flex gap-2">
               {useAI && (
                 <button
@@ -211,7 +311,11 @@ const SendSms = () => {
                   disabled={loading}
                 >
                   {loading ? (
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
                   ) : (
                     "🧠 "
                   )}
@@ -224,7 +328,11 @@ const SendSms = () => {
                 disabled={loading}
               >
                 {loading ? (
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
                 ) : (
                   "📤 "
                 )}

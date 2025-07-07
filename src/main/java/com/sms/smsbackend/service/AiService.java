@@ -11,8 +11,10 @@ import java.util.Map;
 @Service
 public class AiService {
 
+    // ✅ استعمل الرابط والنموذج الجديد
     private final String API_URL = "https://openrouter.ai/api/v1/chat/completions";
-    private final String API_KEY = "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";
+    private final String API_KEY = "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";
+    private final String MODEL = "openrouter/cypher-alpha:free";
 
     // ✅ One-shot string prompt (old style)
     public String generateSingleMessage(String prompt) {
@@ -33,7 +35,7 @@ public class AiService {
         headers.set("X-Title", "SMS AI Advisor");
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", "openai/gpt-3.5-turbo");
+        requestBody.put("model", MODEL);
         requestBody.put("messages", messages);
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
