@@ -11,12 +11,11 @@ import java.util.Map;
 @Service
 public class AiService {
 
-    // ✅ استعمل الرابط والنموذج الجديد
     private final String API_URL = "https://openrouter.ai/api/v1/chat/completions";
-    private final String API_KEY = "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";
+    private final String API_KEY = "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";
     private final String MODEL = "openrouter/cypher-alpha:free";
 
-    // ✅ One-shot string prompt (old style)
+
     public String generateSingleMessage(String prompt) {
         Map<String, String> message = new HashMap<>();
         message.put("role", "user");

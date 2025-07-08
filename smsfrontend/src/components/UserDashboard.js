@@ -21,6 +21,9 @@ const UserDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Twilio config check not needed anymore
+  // const [hasTwilioConfig, setHasTwilioConfig] = useState(true);
+
   const categoryChartData = Object.entries(stats.messagesPerCategory || {}).map(
     ([name, value]) => {
       const displayName = /^[0-9a-f]{24}$/.test(name) ? 'Manual' : name;
@@ -36,6 +39,24 @@ const UserDashboard = () => {
 
   useEffect(() => {
     const token = getToken();
+
+    // يمكنك تحيد هاد الكود ديال Twilio config check:
+    /*
+    fetch('http://localhost:9190/api/twilio/get-my', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.sid && data.authToken && data.fromNumber) {
+          setHasTwilioConfig(true);
+        } else {
+          setHasTwilioConfig(false);
+        }
+      })
+      .catch(() => setHasTwilioConfig(false));
+    */
+
+    // fetch stats
     fetch('http://localhost:9190/api/statistics', {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -55,6 +76,8 @@ const UserDashboard = () => {
   return (
     <UserSidebarLayout>
       <div className="container-fluid px-4 py-4" style={{ backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+        {/* ✅ ALERT HAYED: Twilio config alert removed */}
+
         <div className="row mb-4">
           <div className="col-12">
             <div className="d-flex justify-content-between align-items-center">

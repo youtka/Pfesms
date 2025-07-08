@@ -20,7 +20,27 @@ public class TwilioController {
     }
 
     @GetMapping("/get")
-    public Optional<TwilioConfig> getConfig(@RequestParam String email) {
-        return service.getUserConfig(email);
+    public TwilioConfig getConfig(@RequestParam String email) {
+        Optional<TwilioConfig> configOpt = service.getUserConfig(email);
+
+        // إذا ماكاينش config أصلا
+        if (configOpt.isEmpty()) {
+            return new TwilioConfig();
+        }
+
+        TwilioConfig config = configOpt.get();
+
+        // إلا كانت وحدة من القيم فارغة، رجع config فارغ (باش frontend يقدر يبان alert)
+        if (isNullOrEmpty(config.getSid()) ||
+                isNullOrEmpty(config.getAuthToken()) ||
+                isNullOrEmpty(config.getFromNumber())) {
+            return new TwilioConfig();
+        }
+
+        return config;
+    }
+
+    private boolean isNullOrEmpty(String s) {
+        return s == null || s.trim().isEmpty();
     }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import UserSidebarLayout from './UserSidebarLayout'; // ✅ Sidebar layout wrapper
+import UserSidebarLayout from './UserSidebarLayout';
 import axios from "axios";
 
 const Settings = () => {
@@ -9,6 +9,15 @@ const Settings = () => {
   const [password, setPassword] = useState("");
 
   const token = localStorage.getItem("token");
+
+  // Helper for Twilio flag
+  const setTwilioFlag = (isSet) => {
+    if (isSet) {
+      localStorage.setItem("twilioConfigSet", "true");
+    } else {
+      localStorage.removeItem("twilioConfigSet");
+    }
+  };
 
   useEffect(() => {
     if (!token) {
@@ -20,19 +29,21 @@ const Settings = () => {
       headers: { Authorization: `Bearer ${token}` },
     })
     .then((res) => {
-      console.log("✅ USER DATA:", res.data);
       setUser(res.data);
-
       return axios.get(`http://localhost:9190/api/twilio/get?email=${res.data.email}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
     })
     .then((res) => {
-      console.log("✅ TWILIO CONFIG:", res.data);
-      if (res.data) setConfig(res.data);
+      if (res.data && res.data.sid && res.data.authToken && res.data.fromNumber) {
+        setConfig(res.data);
+        setTwilioFlag(true);
+      } else {
+        setTwilioFlag(false);
+      }
     })
-    .catch((err) => {
-      console.error("❌ Error fetching user or config data:", err);
+    .catch(() => {
+      setTwilioFlag(false);
     });
   }, [token]);
 
@@ -51,11 +62,17 @@ const Settings = () => {
       fromNumber: config.fromNumber
     }, {
       headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      // If Twilio fields are filled, set flag, else remove it
+      if (config.sid && config.authToken && config.fromNumber) {
+        setTwilioFlag(true);
+      } else {
+        setTwilioFlag(false);
+      }
+      setIsEditMode(false);
+      setPassword("");
+      alert("✅ Info updated");
     });
-
-    setIsEditMode(false);
-    setPassword("");
-    alert("✅ Info updated");
   };
 
   const isTwilioEmpty = !config.sid && !config.authToken && !config.fromNumber;

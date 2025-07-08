@@ -8,7 +8,7 @@ const SendSms = () => {
   const [manualNumbers, setManualNumbers] = useState("");
   const [useAI, setUseAI] = useState(false);
   const [message, setMessage] = useState("");
-  const [prompt, setPrompt] = useState(""); // AI prompt
+  const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
 
   const token = localStorage.getItem("token");
@@ -112,14 +112,14 @@ const SendSms = () => {
       categoryId:
         selectedCategoryIds.length === 1
           ? selectedCategoryIds[0]
-          : null, // if one category only, send its id
-      phoneNumbers: manualNumbers
+          : null,
+      numbers: manualNumbers // ✅ هنا بدّلنا الاسم
         ? manualNumbers.split(",").map((n) => n.trim()).filter((n) => n)
         : [],
       message,
       isAi: useAI,
       prompt: prompt,
-      useCategory: selectedCategoryIds.length === 1, // backend uses this if true
+      useCategory: selectedCategoryIds.length === 1,
     };
 
     console.log("Payload:", payload);
@@ -146,15 +146,13 @@ const SendSms = () => {
         <div className="card shadow-sm border-0 rounded-4">
           <div className="card-body p-4 p-md-5">
             <h3 className="mb-4 fw-bold text-primary">📤 Send SMS</h3>
-
-            {/* Modern Category Selection Section */}
+            {/* Category selection */}
             <div className="mb-4">
               <label className="form-label fw-semibold d-flex align-items-center gap-2 mb-3">
                 <i className="fas fa-layer-group text-primary"></i>
                 Select Categories
               </label>
-
-              {/* Select All - Modern Toggle */}
+              {/* Select All */}
               <div className="bg-gradient-primary-subtle border border-primary border-opacity-25 rounded-4 p-3 mb-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div className="d-flex align-items-center gap-2">
@@ -178,8 +176,7 @@ const SendSms = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Individual Categories - Modern Cards */}
+              {/* Individual Categories */}
               <div className="row g-3">
                 {categories.map((cat) => (
                   <div className="col-md-6 col-lg-4" key={cat.id}>
@@ -232,7 +229,6 @@ const SendSms = () => {
                   </div>
                 ))}
               </div>
-
               {/* Selection Summary */}
               {selectedCategoryIds.length > 0 && (
                 <div className="mt-3 p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3">
@@ -245,7 +241,6 @@ const SendSms = () => {
                 </div>
               )}
             </div>
-
             {/* Phone Numbers */}
             <div className="mb-4">
               <label className="form-label fw-semibold">
@@ -259,7 +254,6 @@ const SendSms = () => {
                 onChange={(e) => setManualNumbers(e.target.value)}
               />
             </div>
-
             {/* AI Prompt Toggle + Input */}
             <div className="form-check form-switch mb-4">
               <input
@@ -276,7 +270,6 @@ const SendSms = () => {
                 Use AI to generate message
               </label>
             </div>
-
             {useAI && (
               <div className="mb-4">
                 <label className="form-label fw-semibold">AI Prompt</label>
@@ -289,7 +282,6 @@ const SendSms = () => {
                 />
               </div>
             )}
-
             {/* Message Box */}
             <div className="mb-4">
               <label className="form-label fw-semibold">Message</label>
@@ -301,7 +293,6 @@ const SendSms = () => {
                 placeholder="Type your message or use AI to generate one"
               />
             </div>
-
             {/* Buttons */}
             <div className="d-flex gap-2">
               {useAI && (
